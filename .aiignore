@@ -1,0 +1,10 @@
+.DS_Store
+Cargo.lock
+target
+uv.lock
+.git
+.github
+.venv
+*.css
+*.pem
+*.png
