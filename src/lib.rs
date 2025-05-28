@@ -1,50 +1,13 @@
+use crate::scene::ScenePlugin;
 use bevy::prelude::*;
+
+mod scene;
 
 /// EverShard main plugin
 pub struct EverShardPlugin;
 
 impl Plugin for EverShardPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup);
+        app.add_plugins(ScenePlugin);
     }
-}
-
-fn setup(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    // cube
-    commands.spawn((
-        Mesh3d(meshes.add(Cuboid::new(1.0, 1.0, 1.0))),
-        MeshMaterial3d(materials.add(Color::srgb_u8(124, 144, 255))),
-        Transform::from_xyz(0.0, 0.5, 0.0),
-    ));
-    // 添加环境光
-    commands.insert_resource(AmbientLight {
-        color: Color::WHITE,
-        brightness: 0.5,
-        affects_lightmapped_meshes: false,
-    });
-
-    // 添加定向光（模拟太阳光）
-    commands.spawn((
-        DirectionalLight {
-            shadows_enabled: true,
-            ..default()
-        },
-        Transform::from_xyz(4.0, 8.0, 4.0).looking_at(Vec3::ZERO, Vec3::Y),
-    ));
-
-    // 创建45度视角的相机
-    let camera_position = Vec3::new(10.0, 15.0, 10.0);
-    commands.spawn((
-        Camera3d::default(),
-        Transform::from_xyz(camera_position.x, camera_position.y, camera_position.z)
-            .looking_at(Vec3::ZERO, Vec3::Y),
-        Projection::Perspective(PerspectiveProjection {
-            fov: 45.0f32.to_radians(),
-            ..default()
-        }),
-    ));
 }
