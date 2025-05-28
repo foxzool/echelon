@@ -1,3 +1,4 @@
+use avian3d::prelude::{Collider, RigidBody};
 use bevy::{color::palettes::basic::SILVER, prelude::*};
 
 /// 场景
@@ -31,7 +32,7 @@ fn setup(
     ));
 
     // 创建45度视角的相机
-    let camera_position = Vec3::new(10.0, 15.0, 10.0);
+    let camera_position = Vec3::new(5.0, 5.0, 10.0);
     commands.spawn((
         Camera3d::default(),
         Transform::from_xyz(camera_position.x, camera_position.y, camera_position.z)
@@ -45,5 +46,7 @@ fn setup(
     commands.spawn((
         Mesh3d(meshes.add(Plane3d::default().mesh().size(50.0, 50.0).subdivisions(10))),
         MeshMaterial3d(materials.add(Color::from(SILVER))),
+        RigidBody::Static,
+        Collider::cylinder(50.0, 1.0),
     ));
 }

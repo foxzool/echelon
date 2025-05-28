@@ -1,3 +1,4 @@
+use avian3d::prelude::{Collider, RigidBody};
 use bevy::{prelude::*, render::primitives::Aabb};
 
 pub struct CharacterPlugin;
@@ -24,8 +25,10 @@ fn setup(
     commands.spawn((
         Mesh3d(shape),
         MeshMaterial3d(materials.add(Color::WHITE)),
-        Transform::from_xyz(0.0, 1.0, 0.0),
+        Transform::from_xyz(0.0, 5.0, 0.0),
         Character,
+        RigidBody::Dynamic,
+        Collider::capsule(0.5, 1.0)
     ));
 }
 

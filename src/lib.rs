@@ -1,4 +1,5 @@
 use crate::{character::CharacterPlugin, scene::ScenePlugin};
+use avian3d::PhysicsPlugins;
 use bevy::prelude::*;
 
 mod character;
@@ -9,6 +10,6 @@ pub struct EverShardPlugin;
 
 impl Plugin for EverShardPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(ScenePlugin).add_plugins(CharacterPlugin);
+        app.add_plugins((ScenePlugin, CharacterPlugin, PhysicsPlugins::default()));
     }
 }
