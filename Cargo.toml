@@ -15,6 +15,17 @@ tracing = { version = "0.1", features = [
     "release_max_level_warn",
 ] }
 
+
+
+[package.metadata.bevy_cli]
+default-features = false
+
+[package.metadata.bevy_cli.native]
+features = ["native"]
+
+[package.metadata.bevy_cli.native.dev]
+features = ["dev_native"]
+
 # Idiomatic Bevy code often triggers these lints, and the CI workflow treats them as errors.
 # In some cases they may still signal poor code quality however, so consider commenting out these lines.
 [lints.clippy]
@@ -23,6 +34,8 @@ tracing = { version = "0.1", features = [
 too_many_arguments = "allow"
 # Queries that access many components may trigger this lint.
 type_complexity = "allow"
+# Make sure macros use their standard braces, such as `[]` for `bevy_ecs::children!`.
+nonstandard_macro_braces = "warn"
 
 # Enable a small amount of optimization in the dev profile.
 [profile.dev]
