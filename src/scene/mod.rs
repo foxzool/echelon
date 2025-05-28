@@ -47,6 +47,6 @@ fn setup(
         Mesh3d(meshes.add(Plane3d::default().mesh().size(50.0, 50.0).subdivisions(10))),
         MeshMaterial3d(materials.add(Color::from(SILVER))),
         RigidBody::Static,
-        Collider::cylinder(50.0, 1.0),
+        Collider::cuboid(50.0, 0.01, 50.0),
     ));
 }
