@@ -3,19 +3,18 @@ use bevy::{
     color::palettes::css::{AQUA, BLACK, WHITE},
     platform::collections::{HashMap, HashSet},
     prelude::*,
-    render::mesh::{Indices, PrimitiveTopology},
-    window::PrimaryWindow,
+    render::mesh::{Indices, PrimitiveTopology}
+    ,
 };
-use hexx::{ColumnMeshBuilder, Hex, HexLayout, algorithms::a_star};
-use std::f32::consts::PI;
+use hexx::{ColumnMeshBuilder, Hex, HexLayout};
 
 /// 场景
 pub struct ScenePlugin;
 
 impl Plugin for ScenePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, (setup_camera, setup_grid))
-            .add_systems(Update, handle_input);
+        app.add_systems(Startup, (setup_camera, setup_grid));
+        // .add_systems(Update, handle_input);
     }
 }
 
@@ -38,7 +37,7 @@ fn setup_camera(mut commands: Commands) {
 
     commands.spawn((
         Camera3d::default(),
-        Transform::from_xyz(0.0, 40.0, 60.0).looking_at(Vec3::ZERO, Vec3::Y),
+        Transform::from_xyz(0.0, 10.0, 30.0).looking_at(Vec3::ZERO, Vec3::Y),
         // Projection::Perspective(PerspectiveProjection {
         //     fov: 45.0f32.to_radians(),
         //     ..default()
@@ -47,13 +46,13 @@ fn setup_camera(mut commands: Commands) {
 }
 
 #[derive(Debug, Resource)]
-struct Map {
-    layout: HexLayout,
-    entities: HashMap<Hex, Entity>,
-    blocked_coords: HashSet<Hex>,
-    path_entities: HashSet<Entity>,
+pub(crate) struct Map {
+    pub(crate) layout: HexLayout,
+    pub(crate) entities: HashMap<Hex, Entity>,
+    pub(crate) blocked_coords: HashSet<Hex>,
+    pub(crate) path_entities: HashSet<Entity>,
     blocked_material: Handle<StandardMaterial>,
-    default_material: Handle<StandardMaterial>,
+    pub(crate) default_material: Handle<StandardMaterial>,
     path_material: Handle<StandardMaterial>,
 }
 
@@ -106,14 +105,15 @@ fn setup_grid(
                     Transform::from_xyz(pos.x, height, pos.y),
                 ))
                 .with_children(|parent| {
-                    parent.spawn((
-                        SceneRoot(
-                            asset_server.load(GltfAssetLabel::Scene(0).from_asset(mesh_path)),
-                        ),
-                        Transform::from_xyz(0.0, -height, 0.0)
-                            .with_scale(Vec3::splat(1.6))
-                            .with_rotation(Quat::from_rotation_y(PI / 2.0)),
-                    ));
+                    // parent.spawn((RigidBody::Static, Collider::cuboid(1.0, 1.0, 1.0)));
+                    // parent.spawn((
+                    //     SceneRoot(
+                    //         asset_server.load(GltfAssetLabel::Scene(0).from_asset(mesh_path)),
+                    //     ),
+                    //     Transform::from_xyz(0.0, -height, 0.0)
+                    //         .with_scale(Vec3::splat(1.8))
+                    //         .with_rotation(Quat::from_rotation_y(PI / 2.0)),
+                    // ));
                 })
                 .id();
             (hex, id)
@@ -128,83 +128,6 @@ fn setup_grid(
         blocked_material,
         path_material,
     });
-}
-
-/// Input interaction
-fn handle_input(
-    mut commands: Commands,
-    buttons: Res<ButtonInput<MouseButton>>,
-    windows: Query<&Window, With<PrimaryWindow>>,
-    cameras: Query<(&Camera, &GlobalTransform)>,
-    mut current: Local<Hex>,
-    mut grid: ResMut<Map>,
-) -> Result {
-    let window = windows.single()?;
-    let (camera, cam_transform) = cameras.single()?;
-    let Some(ray) = window
-        .cursor_position()
-        .and_then(|p| camera.viewport_to_world(cam_transform, p).ok())
-    else {
-        return Ok(());
-    };
-    let Some(distance) = ray.intersect_plane(Vec3::ZERO, InfinitePlane3d::new(Dir3::Y)) else {
-        return Ok(());
-    };
-    let point = ray.origin + ray.direction * distance;
-    let hex_pos = grid.layout.world_pos_to_hex(point.xz());
-    let Some(entity) = grid.entities.get(&hex_pos).copied() else {
-        return Ok(());
-    };
-    if buttons.just_pressed(MouseButton::Left) {
-        if grid.blocked_coords.contains(&hex_pos) {
-            grid.blocked_coords.remove(&hex_pos);
-            commands
-                .entity(entity)
-                .insert(MeshMaterial3d(grid.default_material.clone_weak()));
-        } else {
-            grid.blocked_coords.insert(hex_pos);
-            grid.path_entities.remove(&entity);
-            commands
-                .entity(entity)
-                .insert(MeshMaterial3d(grid.blocked_material.clone_weak()));
-        }
-        return Ok(());
-    }
-    if hex_pos == *current {
-        return Ok(());
-    }
-    *current = hex_pos;
-    let path_to_clear: Vec<_> = grid.path_entities.drain().collect();
-    for entity in path_to_clear {
-        commands
-            .entity(entity)
-            .insert(MeshMaterial3d(grid.default_material.clone_weak()));
-    }
-
-    // let check_pos = Hex::new(hex_pos.x, hex_pos.z);
-    let Some(path) = a_star(Hex::ZERO, hex_pos, |_, h| {
-        (grid.entities.contains_key(&h) && !grid.blocked_coords.contains(&h)).then_some(1)
-    }) else {
-        info!("No path found {:?}", hex_pos);
-        return Ok(());
-    };
-    let entities: HashSet<_> = path
-        .into_iter()
-        .inspect(|h| {
-            if grid.blocked_coords.contains(h) {
-                error!("A star picked a blocked coord: {h:?}");
-            }
-        })
-        .filter_map(|h| grid.entities.get(&h).copied())
-        .collect();
-    for entity in &entities {
-        commands
-            .entity(*entity)
-            .insert(MeshMaterial3d(grid.path_material.clone_weak()));
-    }
-    grid.path_entities = entities;
-
-    Ok(())
 }
 
 /// World size of the hexagons (outer radius)
