@@ -1,12 +1,13 @@
+use crate::character::MapHex;
 use bevy::{
     asset::RenderAssetUsages,
     color::palettes::css::{AQUA, BLACK, WHITE},
     platform::collections::{HashMap, HashSet},
     prelude::*,
-    render::mesh::{Indices, PrimitiveTopology}
-    ,
+    render::mesh::{Indices, PrimitiveTopology},
 };
 use hexx::{ColumnMeshBuilder, Hex, HexLayout};
+use std::{collections::VecDeque, f32::consts::PI};
 
 /// 场景
 pub struct ScenePlugin;
@@ -50,7 +51,7 @@ pub(crate) struct Map {
     pub(crate) layout: HexLayout,
     pub(crate) entities: HashMap<Hex, Entity>,
     pub(crate) blocked_coords: HashSet<Hex>,
-    pub(crate) path_entities: HashSet<Entity>,
+    pub(crate) path_entities: VecDeque<Entity>,
     blocked_material: Handle<StandardMaterial>,
     pub(crate) default_material: Handle<StandardMaterial>,
     path_material: Handle<StandardMaterial>,
@@ -103,17 +104,18 @@ fn setup_grid(
                     Mesh3d(mesh_handle.clone()),
                     MeshMaterial3d(material.clone_weak()),
                     Transform::from_xyz(pos.x, height, pos.y),
+                    MapHex(hex),
                 ))
                 .with_children(|parent| {
                     // parent.spawn((RigidBody::Static, Collider::cuboid(1.0, 1.0, 1.0)));
-                    // parent.spawn((
-                    //     SceneRoot(
-                    //         asset_server.load(GltfAssetLabel::Scene(0).from_asset(mesh_path)),
-                    //     ),
-                    //     Transform::from_xyz(0.0, -height, 0.0)
-                    //         .with_scale(Vec3::splat(1.8))
-                    //         .with_rotation(Quat::from_rotation_y(PI / 2.0)),
-                    // ));
+                    parent.spawn((
+                        SceneRoot(
+                            asset_server.load(GltfAssetLabel::Scene(0).from_asset(mesh_path)),
+                        ),
+                        Transform::from_xyz(0.0, -height, 0.0)
+                            .with_scale(Vec3::splat(1.8))
+                            .with_rotation(Quat::from_rotation_y(PI / 2.0)),
+                    ));
                 })
                 .id();
             (hex, id)

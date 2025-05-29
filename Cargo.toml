@@ -14,6 +14,7 @@ avian3d = "0.3"
 bevy = "0.16"
 bevy-inspector-egui = "0.31"
 hexx = "0.20"
+anyhow = "1.0.98"
 
 
 [package.metadata.bevy_cli]
