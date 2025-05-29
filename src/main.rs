@@ -1,5 +1,5 @@
 use bevy::{asset::AssetMetaCheck, prelude::*};
-use evershard::EverShardPlugin;
+use echelon::EchelonPlugin;
 
 fn main() -> AppExit {
     App::new()
@@ -8,7 +8,7 @@ fn main() -> AppExit {
             DefaultPlugins
                 .set(WindowPlugin {
                     primary_window: Some(Window {
-                        title: "EverShard".to_string(),
+                        title: "Echelon".to_string(),
                         // Bind to canvas included in `index.html`
                         canvas: Some("#bevy".to_owned()),
                         fit_canvas_to_parent: true,
@@ -23,6 +23,6 @@ fn main() -> AppExit {
                     ..default()
                 }),
         )
-        .add_plugins(EverShardPlugin)
+        .add_plugins(EchelonPlugin)
         .run()
 }
