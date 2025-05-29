@@ -36,13 +36,14 @@ fn setup_camera(mut commands: Commands) {
         Transform::from_xyz(4.0, 8.0, 4.0).looking_at(Vec3::ZERO, Vec3::Y),
     ));
 
+    // 创建类似Diablo的45度等轴测视角
     commands.spawn((
         Camera3d::default(),
-        Transform::from_xyz(0.0, 10.0, 30.0).looking_at(Vec3::ZERO, Vec3::Y),
-        // Projection::Perspective(PerspectiveProjection {
-        //     fov: 45.0f32.to_radians(),
-        //     ..default()
-        // }),
+        Transform::from_xyz(20.0, 20.0, 20.0).looking_at(Vec3::ZERO, Vec3::Y),
+        Projection::Perspective(PerspectiveProjection {
+            fov: 45.0f32.to_radians(),
+            ..default()
+        }),
     ));
 }
 
