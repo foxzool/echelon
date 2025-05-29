@@ -12,16 +12,7 @@ debug = []
 [dependencies]
 avian3d = "0.3"
 bevy = "0.16"
-# Set max log levels. This helps avoid unwanted low-severity log spam, which can affect performance.
-log = { version = "0.4", features = [
-    "max_level_debug",
-    "release_max_level_warn",
-] }
-tracing = { version = "0.1", features = [
-    "max_level_debug",
-    "release_max_level_warn",
-] }
-
+hexx = "0.20"
 
 
 [package.metadata.bevy_cli]

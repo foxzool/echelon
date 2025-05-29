@@ -30,12 +30,11 @@ fn setup(
         Mesh3d(shape),
         MeshMaterial3d(materials.add(Color::WHITE)),
         Transform::from_xyz(0.0, 5.0, 0.0),
-        Character { // 初始化速度
+        Character {
+            // 初始化速度
             move_speed: 5.0,
             rotation_speed: f32::to_radians(90.0), // 每秒旋转90度
         },
-        RigidBody::Dynamic,
-        Collider::cylinder(0.5, 1.5)
     ));
 }
 
@@ -78,7 +77,6 @@ fn character_movement_system(
         }
     }
 }
-
 
 fn draw_axes(mut gizmos: Gizmos, query: Query<(&Transform, &Aabb), With<Character>>) {
     for (&transform, &aabb) in &query {

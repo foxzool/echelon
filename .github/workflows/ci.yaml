@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -52,17 +52,17 @@ jobs:
         uses: cargo-bins/cargo-binstall@main
 
       - name: Install Wild
-        run: cargo binstall wild-linker --locked --force
+        run: cargo binstall wild-linker  --force
 
       - name: Install nextest
-        run: cargo binstall cargo-nextest --locked --force
+        run: cargo binstall cargo-nextest  --force
 
       - name: Run tests
-        run: cargo nextest run --locked --workspace --all-targets --no-fail-fast --no-tests warn
+        run: cargo nextest run  --workspace --all-targets --no-fail-fast --no-tests warn
 
       # Running doc tests separately is a workaround for <https://github.com/rust-lang/cargo/issues/6669>.
       - name: Run doctests
-        run: cargo test --locked --workspace --doc
+        run: cargo test  --workspace --doc
         # Failing until we have a `lib.rs` again
         continue-on-error: true
 
@@ -89,7 +89,7 @@ jobs:
         uses: cargo-bins/cargo-binstall@main
 
       - name: Install Wild
-        run: cargo binstall wild-linker --locked --force
+        run: cargo binstall wild-linker  --force
 
       - name: Install dependencies
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev
@@ -101,7 +101,7 @@ jobs:
           shared-key: lints
 
       - name: Run clippy lints
-        run: cargo clippy --locked --workspace --all-targets --all-features -- --deny warnings
+        run: cargo clippy  --workspace --all-targets --all-features -- --deny warnings
 
   # Check formatting.
   format:
@@ -143,7 +143,7 @@ jobs:
         uses: cargo-bins/cargo-binstall@main
 
       - name: Install Wild
-        run: cargo binstall wild-linker --locked --force
+        run: cargo binstall wild-linker  --force
 
       - name: Install dependencies
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev
@@ -155,7 +155,7 @@ jobs:
           shared-key: lints
 
       - name: Check documentation
-        run: cargo doc --locked --workspace --all-features --document-private-items --no-deps
+        run: cargo doc  --workspace --all-features --document-private-items --no-deps
 
   # Run Bevy lints.
   bevy-lint:
@@ -188,7 +188,7 @@ jobs:
         uses: cargo-bins/cargo-binstall@main
 
       - name: Install Wild
-        run: cargo binstall wild-linker --locked --force
+        run: cargo binstall wild-linker  --force
 
       - name: Run Bevy linter
-        run: bevy_lint --locked --workspace --all-targets --all-features
+        run: bevy_lint  --workspace --all-targets --all-features
