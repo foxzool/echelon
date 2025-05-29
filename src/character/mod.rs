@@ -1,4 +1,3 @@
-use avian3d::prelude::{Collider, RigidBody};
 use bevy::{prelude::*, render::primitives::Aabb};
 
 pub struct CharacterPlugin;

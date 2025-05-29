@@ -6,7 +6,8 @@ use bevy::{
     render::mesh::{Indices, PrimitiveTopology},
     window::PrimaryWindow,
 };
-use hexx::{algorithms::a_star, ColumnMeshBuilder, Hex, HexLayout};
+use hexx::{ColumnMeshBuilder, Hex, HexLayout, algorithms::a_star};
+use std::f32::consts::PI;
 
 /// 场景
 pub struct ScenePlugin;
@@ -37,11 +38,11 @@ fn setup_camera(mut commands: Commands) {
 
     commands.spawn((
         Camera3d::default(),
-        Transform::from_xyz(0.0, 60.0, 60.0).looking_at(Vec3::ZERO, Vec3::Y),
-        Projection::Perspective(PerspectiveProjection {
-            fov: 45.0f32.to_radians(),
-            ..default()
-        }),
+        Transform::from_xyz(0.0, 40.0, 60.0).looking_at(Vec3::ZERO, Vec3::Y),
+        // Projection::Perspective(PerspectiveProjection {
+        //     fov: 45.0f32.to_radians(),
+        //     ..default()
+        // }),
     ));
 }
 
@@ -60,11 +61,13 @@ fn setup_grid(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    asset_server: Res<AssetServer>,
 ) {
     let layout = HexLayout {
         scale: HEX_SIZE,
         ..default()
     };
+
     // materials
     let default_material = materials.add(Color::Srgba(WHITE));
     let blocked_material = materials.add(Color::Srgba(BLACK));
@@ -78,17 +81,23 @@ fn setup_grid(
         .enumerate()
         .map(|(i, hex)| {
             let pos = layout.hex_to_world_pos(hex);
+            let blocked = i != 0 && i % 5 == 0;
             let material = match hex {
-                c if i != 0 && i % 5 == 0 => {
+                c if blocked => {
                     blocked_coords.insert(c);
                     blocked_material.clone()
                 }
                 _ => default_material.clone(),
             };
-            let height = if i != 0 && i % 5 == 0 {
-                -COLUMN_HEIGHT + 1.0
+            let height = if blocked {
+                -COLUMN_HEIGHT
             } else {
                 -COLUMN_HEIGHT
+            };
+            let mesh_path = if blocked {
+                "starter_kit/stone-hill.glb"
+            } else {
+                "starter_kit/sand.glb"
             };
             let id = commands
                 .spawn((
@@ -96,6 +105,16 @@ fn setup_grid(
                     MeshMaterial3d(material.clone_weak()),
                     Transform::from_xyz(pos.x, height, pos.y),
                 ))
+                .with_children(|parent| {
+                    parent.spawn((
+                        SceneRoot(
+                            asset_server.load(GltfAssetLabel::Scene(0).from_asset(mesh_path)),
+                        ),
+                        Transform::from_xyz(0.0, -height, 0.0)
+                            .with_scale(Vec3::splat(1.6))
+                            .with_rotation(Quat::from_rotation_y(PI / 2.0)),
+                    ));
+                })
                 .id();
             (hex, id)
         })
@@ -191,7 +210,7 @@ fn handle_input(
 /// World size of the hexagons (outer radius)
 const HEX_SIZE: Vec2 = Vec2::splat(1.0);
 /// World space height of hex columns
-const COLUMN_HEIGHT: f32 = 10.0;
+const COLUMN_HEIGHT: f32 = 1.0;
 /// Map radius
 const MAP_RADIUS: u32 = 20;
 
