@@ -1,5 +1,6 @@
+use avian3d::prelude::{Collider, RigidBody};
 use bevy::{prelude::*, window::PrimaryWindow};
-use hexx::{Hex, algorithms::a_star};
+use hexx::{algorithms::a_star, Hex};
 use std::collections::VecDeque;
 
 pub struct CharacterPlugin;
@@ -27,6 +28,8 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             // 初始化速度
             move_speed: 5.0,
         },
+        RigidBody::Dynamic,
+        Collider::cuboid(1.0, 1.0, 1.0),
     ));
 }
 

@@ -1,4 +1,5 @@
 use crate::character::MapHex;
+use avian3d::prelude::{Collider, RigidBody};
 use bevy::{
     asset::RenderAssetUsages,
     color::palettes::css::{BLACK, WHITE},
@@ -71,7 +72,9 @@ fn setup_grid(
     let blocked_material = materials.add(Color::Srgba(BLACK));
     // mesh
     let mesh = hexagonal_column(&layout);
+    let collider = Collider::convex_hull_from_mesh(&mesh).unwrap();
     let mesh_handle = meshes.add(mesh);
+
     let mut blocked_coords = HashSet::new();
     let entities = Hex::ZERO
         .spiral_range(0..=MAP_RADIUS)
@@ -104,7 +107,7 @@ fn setup_grid(
                     MapHex(hex),
                 ))
                 .with_children(|parent| {
-                    // parent.spawn((RigidBody::Static, Collider::cuboid(1.0, 1.0, 1.0)));
+                    parent.spawn((RigidBody::Static, collider.clone()));
                     parent.spawn((
                         SceneRoot(
                             asset_server.load(GltfAssetLabel::Scene(0).from_asset(mesh_path)),
