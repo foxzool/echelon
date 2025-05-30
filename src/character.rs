@@ -1,6 +1,5 @@
-use avian3d::prelude::{Collider, RigidBody};
 use bevy::{prelude::*, window::PrimaryWindow};
-use hexx::{algorithms::a_star, Hex};
+use hexx::{Hex, algorithms::a_star};
 use std::collections::VecDeque;
 
 pub struct CharacterPlugin;
@@ -8,7 +7,7 @@ pub struct CharacterPlugin;
 impl Plugin for CharacterPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup)
-            .add_systems(Update, (click_to_move, move_character));
+            .add_systems(Update, (click_to_move, move_character, keyboard_movement));
     }
 }
 
@@ -28,8 +27,8 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             // 初始化速度
             move_speed: 5.0,
         },
-        RigidBody::Dynamic,
-        Collider::cuboid(1.0, 1.0, 1.0),
+        // RigidBody::Dynamic,
+        // Collider::cuboid(1.0, 1.0, 1.0),
     ));
 }
 
@@ -249,6 +248,92 @@ pub fn move_character_to_hex(
 
     // 更新地图的路径实体
     grid.path_entities = VecDeque::from(path);
+
+    Ok(())
+}
+
+/// 处理键盘WASD移动输入
+fn keyboard_movement(
+    time: Res<Time>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut q_character: Query<(&mut Transform, &Character), Without<Camera>>,
+    cameras: Query<&Transform, (With<Camera3d>, Without<Character>)>,
+    grid: Res<crate::scene::Map>,
+) -> Result<()> {
+    let (mut transform, character) = q_character.single_mut()?;
+    let camera_transform = cameras.single()?;
+
+    // 如果正在通过点击移动，则不处理键盘输入
+    if !grid.path_entities.is_empty() {
+        return Ok(());
+    }
+
+    // 计算移动方向（屏幕空间）
+    let mut screen_direction = Vec2::ZERO;
+
+    // 处理WASD输入（按照屏幕方向）
+    if keyboard_input.pressed(KeyCode::KeyW) {
+        screen_direction.y += 1.0; // 屏幕向上
+    }
+    if keyboard_input.pressed(KeyCode::KeyS) {
+        screen_direction.y -= 1.0; // 屏幕向下
+    }
+    if keyboard_input.pressed(KeyCode::KeyA) {
+        screen_direction.x -= 1.0; // 屏幕向左
+    }
+    if keyboard_input.pressed(KeyCode::KeyD) {
+        screen_direction.x += 1.0; // 屏幕向右
+    }
+
+    // 如果没有输入，直接返回
+    if screen_direction.length_squared() < 0.01 {
+        return Ok(());
+    }
+
+    // 归一化方向向量（确保对角线移动速度不会更快）
+    if screen_direction.length_squared() > 1.01 {
+        screen_direction = screen_direction.normalize();
+    }
+
+    // 从摄像机转换屏幕方向到世界空间方向
+    // 对于45度等轴测视角，我们需要将屏幕方向转换为世界空间
+    // 获取摄像机的前方和右方向向量（在xz平面上）
+    let camera_forward = Vec3::new(
+        camera_transform.forward().x,
+        0.0,
+        camera_transform.forward().z,
+    )
+    .normalize();
+    let camera_right =
+        Vec3::new(camera_transform.right().x, 0.0, camera_transform.right().z).normalize();
+
+    // 将屏幕方向转换为世界空间方向
+    let world_direction = camera_right * screen_direction.x + camera_forward * screen_direction.y;
+
+    // 计算移动距离
+    let move_delta = world_direction * character.move_speed * time.delta_secs();
+
+    // 计算新位置
+    let new_position = transform.translation + move_delta;
+
+    // 检查新位置是否会与被阻挡的六边形碰撞
+    let new_hex = grid.layout.world_pos_to_hex(new_position.xz());
+
+    // 如果新位置是被阻挡的六边形，则不移动
+    if grid.blocked_coords.contains(&new_hex) {
+        info!("移动被阻挡: {:?}", new_hex);
+        return Ok(());
+    }
+
+    // 更新角色位置
+    transform.translation = new_position;
+
+    // 如果角色正在移动，让角色朝向移动方向
+    if move_delta.length_squared() > 0.01 {
+        // 计算朝向角度（只在xz平面上旋转）
+        let angle = move_delta.z.atan2(move_delta.x);
+        transform.rotation = Quat::from_rotation_y(-angle + std::f32::consts::FRAC_PI_2);
+    }
 
     Ok(())
 }
