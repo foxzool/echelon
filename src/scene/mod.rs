@@ -1,7 +1,7 @@
 use crate::character::MapHex;
 use bevy::{
     asset::RenderAssetUsages,
-    color::palettes::css::{AQUA, BLACK, WHITE},
+    color::palettes::css::{BLACK, WHITE},
     platform::collections::{HashMap, HashSet},
     prelude::*,
     render::mesh::{Indices, PrimitiveTopology},
@@ -53,9 +53,6 @@ pub(crate) struct Map {
     pub(crate) entities: HashMap<Hex, Entity>,
     pub(crate) blocked_coords: HashSet<Hex>,
     pub(crate) path_entities: VecDeque<Entity>,
-    blocked_material: Handle<StandardMaterial>,
-    pub(crate) default_material: Handle<StandardMaterial>,
-    path_material: Handle<StandardMaterial>,
 }
 
 fn setup_grid(
@@ -72,7 +69,6 @@ fn setup_grid(
     // materials
     let default_material = materials.add(Color::Srgba(WHITE));
     let blocked_material = materials.add(Color::Srgba(BLACK));
-    let path_material = materials.add(Color::Srgba(AQUA));
     // mesh
     let mesh = hexagonal_column(&layout);
     let mesh_handle = meshes.add(mesh);
@@ -91,7 +87,7 @@ fn setup_grid(
                 _ => default_material.clone(),
             };
             let height = if blocked {
-                -COLUMN_HEIGHT
+                -COLUMN_HEIGHT + 1.0
             } else {
                 -COLUMN_HEIGHT
             };
@@ -127,9 +123,6 @@ fn setup_grid(
         entities,
         blocked_coords,
         path_entities: Default::default(),
-        default_material,
-        blocked_material,
-        path_material,
     });
 }
 

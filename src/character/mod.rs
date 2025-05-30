@@ -1,5 +1,5 @@
 use bevy::{prelude::*, window::PrimaryWindow};
-use hexx::{algorithms::a_star, Hex};
+use hexx::{Hex, algorithms::a_star};
 use std::collections::VecDeque;
 
 pub struct CharacterPlugin;
@@ -14,10 +14,9 @@ impl Plugin for CharacterPlugin {
 #[derive(Component)]
 pub struct Character {
     pub move_speed: f32,
-    pub rotation_speed: f32,
 }
 
-fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, asset_server: Res<AssetServer>) {
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
         Name::new("Character"),
         SceneRoot(
@@ -27,10 +26,7 @@ fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, asset_server:
         Character {
             // 初始化速度
             move_speed: 5.0,
-            rotation_speed: f32::to_radians(90.0), // 每秒旋转90度
         },
-        // RigidBody::Dynamic,
-        // Collider::cuboid(0.5, 1.5, 0.5),
     ));
 }
 
@@ -43,7 +39,6 @@ fn click_to_move(
     cameras: Query<(&Camera, &GlobalTransform), Without<Character>>,
     mut current: Local<Hex>,
     mut grid: ResMut<crate::scene::Map>,
-    mut commands: Commands,
     q_character: Query<(Entity, &Transform, &Character), Without<Camera>>,
 ) -> Result {
     if buttons.just_pressed(MouseButton::Left) {
@@ -61,24 +56,15 @@ fn click_to_move(
         };
         let point = ray.origin + ray.direction * distance;
         let hex_pos = grid.layout.world_pos_to_hex(point.xz());
-        let Some(hex_entity) = grid.entities.get(&hex_pos).copied() else {
-            return Ok(());
-        };
         if hex_pos == *current {
             return Ok(());
         }
         *current = hex_pos;
 
         // 获取角色实体
-        if let Ok((character_entity, transform, _)) = q_character.single() {
+        if let Ok((_character_entity, transform, _)) = q_character.single() {
             // 使用新的move_character_to_hex函数移动角色
-            if let Err(err) = move_character_to_hex(
-                character_entity,
-                hex_pos,
-                &mut commands,
-                transform,
-                &mut grid,
-            ) {
+            if let Err(err) = move_character_to_hex(hex_pos, transform, &mut grid) {
                 error!("移动角色失败: {}", err);
             } else {
                 info!("角色开始移动到 {:?}", hex_pos);
@@ -239,9 +225,7 @@ pub fn get_character_hex(character_transform: &Transform, grid: &crate::scene::M
 
 /// 移动角色到指定的hex坐标
 pub fn move_character_to_hex(
-    character_entity: Entity,
     target_hex: Hex,
-    commands: &mut Commands,
     transform: &Transform,
     grid: &mut crate::scene::Map,
 ) -> Result<()> {
